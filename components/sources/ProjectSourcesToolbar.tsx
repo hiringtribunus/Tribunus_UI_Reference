@@ -17,13 +17,13 @@ import { cn } from "@/lib/cn";
 
 interface ProjectSourcesToolbarProps {
   projectId: string;
-  query: {
+  query?: {
     q?: string;
     kind?: ListSourcesParams["kind"];
     status?: ListSourcesParams["status"];
     sort?: ListSourcesParams["sort"];
   };
-  onAddSourceClick?: () => void;
+  onAddClick?: () => void;
 }
 
 const kindOptions: { value: NonNullable<ListSourcesParams["kind"]>; label: string }[] =
@@ -66,23 +66,23 @@ const sortOptions: {
 export function ProjectSourcesToolbar({
   projectId,
   query,
-  onAddSourceClick,
+  onAddClick,
 }: ProjectSourcesToolbarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const currentSearch = searchParams.get("q") || query.q || "";
+  const currentSearch = searchParams.get("q") || query?.q || "";
   const currentKind =
     (searchParams.get("kind") as ListSourcesParams["kind"] | null) ||
-    query.kind ||
+    query?.kind ||
     "all";
   const currentStatus =
     (searchParams.get("status") as ListSourcesParams["status"] | null) ||
-    query.status ||
+    query?.status ||
     "active";
   const currentSort =
     (searchParams.get("sort") as ListSourcesParams["sort"] | null) ||
-    query.sort ||
+    query?.sort ||
     "updated_desc";
 
   const [searchValue, setSearchValue] = useState(currentSearch);
@@ -189,8 +189,8 @@ export function ProjectSourcesToolbar({
       <div className="flex-1"></div>
 
       <Button
-        onClick={() => onAddSourceClick?.()}
-        disabled={!onAddSourceClick}
+        onClick={() => onAddClick?.()}
+        disabled={!onAddClick}
         className={cn(
           "bg-accent hover:bg-accent-hover text-white",
           "rounded-sm px-4 h-10"
