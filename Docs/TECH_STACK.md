@@ -1,0 +1,1 @@
+Use Next.js (App Router) + TypeScript + Tailwind CSS + shadcn/ui (Radix) + lucide-react, with Supabase (Postgres + Auth + Storage) and Prisma for DB access/migrations; deploy on Vercel (Node runtime). Add Zod for schema validation and TanStack Query only if you end up doing heavy client-side fetching (otherwise use Server Actions/Route Handlers).
