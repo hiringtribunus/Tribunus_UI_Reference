@@ -1,3 +1,14 @@
+import {
+  SourceFormat,
+  SourceKind,
+  type CreateSourceInput,
+  type ListSourcesParams,
+  type ProjectSource,
+  type UpdateSourceInput,
+} from "@/lib/sources/types";
+import { ProjectProfile, ProjectProfileData } from "@/lib/projects/profile-types";
+import { createDefaultProfile } from "@/lib/projects/profile-defaults";
+
 /**
  * Mock data store for development/testing
  * Replace with real Supabase calls once configured
@@ -169,9 +180,6 @@ export async function deleteMockProject(id: string): Promise<boolean> {
 // Project Profiles Mock Storage
 // ============================================================================
 
-import { ProjectProfile, ProjectProfileData } from "@/lib/projects/profile-types";
-import { createDefaultProfile } from "@/lib/projects/profile-defaults";
-
 // In-memory profile storage (Map for O(1) lookup)
 let mockProfiles: Map<string, ProjectProfile> = new Map();
 
@@ -219,4 +227,260 @@ export async function updateMockProjectProfile(
 
   mockProfiles.set(projectId, updated);
   return updated;
+}
+
+// ============================================================================
+// Project Sources Mock Storage
+// ============================================================================
+
+let mockSources: ProjectSource[] = [
+  {
+    id: "source-1",
+    project_id: mockProjects[0].id,
+    kind: SourceKind.CouncilReport,
+    format: SourceFormat.Url,
+    title: "Council report: Rezoning approval",
+    url: "https://city.example.org/reports/rezoning-123-main",
+    storage_path: null,
+    mime_type: null,
+    file_size_bytes: null,
+    publisher: "City Council",
+    published_at: "2024-03-15",
+    meeting_date: "2024-03-12",
+    meeting_body: "City Council",
+    agenda_item: "Rezoning - 123 Main St",
+    project_ref: "DP-2024-015",
+    tags: ["zoning", "council"],
+    notes: "Includes conditions for façade treatments.",
+    status: "active",
+    ingestion: "not_ingested",
+    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "source-2",
+    project_id: mockProjects[0].id,
+    kind: SourceKind.News,
+    format: SourceFormat.File,
+    title: "Local paper coverage",
+    url: null,
+    storage_path: `${mockProjects[0].id}/source-2/story.pdf`,
+    mime_type: "application/pdf",
+    file_size_bytes: 1024 * 320,
+    publisher: "San Francisco Times",
+    published_at: "2024-02-20",
+    meeting_date: null,
+    meeting_body: null,
+    agenda_item: null,
+    project_ref: null,
+    tags: ["news", "community"],
+    notes: null,
+    status: "active",
+    ingestion: "not_ingested",
+    created_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "source-3",
+    project_id: mockProjects[1].id,
+    kind: SourceKind.ZoningMap,
+    format: SourceFormat.Url,
+    title: "Zoning map - waterfront",
+    url: "https://planning.example.org/maps/waterfront-zoning",
+    storage_path: null,
+    mime_type: null,
+    file_size_bytes: null,
+    publisher: "Planning Dept.",
+    published_at: null,
+    meeting_date: null,
+    meeting_body: null,
+    agenda_item: null,
+    project_ref: "WF-2023-08",
+    tags: ["map", "zoning"],
+    notes: "Check overlays for floodplain.",
+    status: "archived",
+    ingestion: "not_ingested",
+    created_at: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+];
+
+function compareDateStringsDesc(aDate: string | null, bDate: string | null) {
+  if (!aDate && !bDate) return 0;
+  if (!aDate) return 1;
+  if (!bDate) return -1;
+  return new Date(bDate).getTime() - new Date(aDate).getTime();
+}
+
+/**
+ * Get sources for a project with search/filter/sort options
+ */
+export async function getMockProjectSources(
+  projectId: string,
+  params: ListSourcesParams = {}
+): Promise<ProjectSource[]> {
+  await delay();
+
+  let results = mockSources.filter((source) => source.project_id === projectId);
+
+  // Status filter (default active)
+  const statusFilter = params.status ?? "active";
+  if (statusFilter !== "all") {
+    results = results.filter((source) => source.status === statusFilter);
+  }
+
+  // Kind filter
+  if (params.kind && params.kind !== "all") {
+    results = results.filter((source) => source.kind === params.kind);
+  }
+
+  // Search
+  if (params.q) {
+    const query = params.q.toLowerCase();
+    results = results.filter((source) => {
+      const haystacks = [
+        source.title,
+        source.publisher,
+        source.notes,
+        source.url,
+        source.project_ref,
+      ]
+        .filter(Boolean)
+        .map((value) => value!.toLowerCase());
+
+      return haystacks.some((value) => value.includes(query));
+    });
+  }
+
+  // Sort
+  const sort = params.sort ?? "updated_desc";
+  results = [...results].sort((a, b) => {
+    switch (sort) {
+      case "created_desc":
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      case "title_asc":
+        return a.title.localeCompare(b.title);
+      case "published_desc":
+        return compareDateStringsDesc(a.published_at, b.published_at);
+      case "meeting_desc":
+        return compareDateStringsDesc(a.meeting_date, b.meeting_date);
+      case "updated_desc":
+      default:
+        return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+    }
+  });
+
+  return results;
+}
+
+export async function getMockSourceById(
+  projectId: string,
+  sourceId: string
+): Promise<ProjectSource | null> {
+  await delay();
+  return (
+    mockSources.find(
+      (source) => source.project_id === projectId && source.id === sourceId
+    ) || null
+  );
+}
+
+export async function createMockSource(
+  projectId: string,
+  input: CreateSourceInput
+): Promise<ProjectSource> {
+  await delay();
+
+  const now = new Date().toISOString();
+  const newSource: ProjectSource = {
+    id: generateId(),
+    project_id: projectId,
+    kind: input.kind,
+    format: input.format,
+    title: input.title,
+    url: input.format === SourceFormat.Url ? input.url : null,
+    storage_path: input.format === SourceFormat.File ? input.storage_path : null,
+    mime_type: input.format === SourceFormat.File ? input.mime_type ?? null : null,
+    file_size_bytes:
+      input.format === SourceFormat.File ? input.file_size_bytes ?? null : null,
+    publisher: input.publisher ?? null,
+    published_at: input.published_at ?? null,
+    meeting_date: input.meeting_date ?? null,
+    meeting_body: input.meeting_body ?? null,
+    agenda_item: input.agenda_item ?? null,
+    project_ref: input.project_ref ?? null,
+    tags: input.tags ?? [],
+    notes: input.notes ?? null,
+    status: "active",
+    ingestion: "not_ingested",
+    created_at: now,
+    updated_at: now,
+  };
+
+  mockSources.unshift(newSource);
+  return newSource;
+}
+
+export async function updateMockSource(
+  projectId: string,
+  input: UpdateSourceInput
+): Promise<ProjectSource | null> {
+  await delay();
+
+  const index = mockSources.findIndex(
+    (source) => source.project_id === projectId && source.id === input.id
+  );
+
+  if (index === -1) return null;
+
+  const existing = mockSources[index];
+  const nextFormat = input.format ?? existing.format;
+
+  const updated: ProjectSource = {
+    ...existing,
+    ...input,
+    format: nextFormat,
+    url: nextFormat === SourceFormat.Url ? input.url ?? existing.url : null,
+    storage_path:
+      nextFormat === SourceFormat.File
+        ? input.storage_path ?? existing.storage_path
+        : null,
+    mime_type:
+      nextFormat === SourceFormat.File ? input.mime_type ?? existing.mime_type : null,
+    file_size_bytes:
+      nextFormat === SourceFormat.File
+        ? input.file_size_bytes ?? existing.file_size_bytes
+        : null,
+    publisher: input.publisher ?? existing.publisher,
+    published_at: input.published_at ?? existing.published_at,
+    meeting_date: input.meeting_date ?? existing.meeting_date,
+    meeting_body: input.meeting_body ?? existing.meeting_body,
+    agenda_item: input.agenda_item ?? existing.agenda_item,
+    project_ref: input.project_ref ?? existing.project_ref,
+    tags: input.tags ?? existing.tags,
+    notes: input.notes ?? existing.notes,
+    status: input.status ?? existing.status,
+    ingestion: "not_ingested",
+    created_at: existing.created_at,
+    updated_at: new Date().toISOString(),
+  };
+
+  mockSources[index] = updated;
+  return updated;
+}
+
+export async function deleteMockSource(
+  projectId: string,
+  sourceId: string
+): Promise<boolean> {
+  await delay();
+
+  const index = mockSources.findIndex(
+    (source) => source.project_id === projectId && source.id === sourceId
+  );
+
+  if (index === -1) return false;
+
+  mockSources.splice(index, 1);
+  return true;
 }
