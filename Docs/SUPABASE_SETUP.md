@@ -370,11 +370,320 @@ supabase
   .subscribe()
 ```
 
+---
+
+## Feature 5 — Pro Forma / Scenario Planning
+
+> **Status:** Database migration exists, but application currently uses mock data layer
+
+### Migration File Location
+
+The migration already exists at:
+```
+supabase/migrations/20241224000000_create_project_proformas.sql
+```
+
+### Migration Contents
+
+```sql
+create extension if not exists "pgcrypto";
+
+create table if not exists public.project_proformas (
+  project_id uuid primary key references public.projects(id) on delete cascade,
+  updated_at timestamptz not null default now(),
+  assumptions jsonb not null default '{}'::jsonb
+);
+
+create index if not exists project_proformas_updated_at_idx
+on public.project_proformas(updated_at desc);
+
+-- updated_at trigger
+create or replace function public.set_updated_at()
+returns trigger language plpgsql as $$
+begin new.updated_at = now(); return new; end;
+$$;
+
+drop trigger if not exists trg_project_proformas_set_updated_at on public.project_proformas;
+create trigger trg_project_proformas_set_updated_at
+before update on public.project_proformas
+for each row execute function public.set_updated_at();
+```
+
+### To Enable Supabase for Feature 5
+
+1. **Apply the migration**:
+   - Option A: Run the SQL above in Supabase SQL Editor
+   - Option B: Use Supabase CLI: `supabase db push`
+
+2. **Uncomment Supabase code in `lib/proforma/queries.ts`**:
+   - Find the commented Supabase implementation
+   - Comment out the mock calls: `getMockProForma()`, `saveMockProForma()`, etc.
+   - Uncomment the real Supabase query code
+
+3. **Uncomment Supabase code in `lib/proforma/actions.ts`**:
+   - Find the commented Supabase implementation
+   - Comment out the mock save call
+   - Uncomment the real Supabase upsert
+
+4. **Test the integration**:
+   - Navigate to `/proforma`
+   - Select a project
+   - Edit assumptions and save
+   - Verify data persists in Supabase Table Editor
+
+**Note:** Feature 5 is 100% functional with mock data, so enabling Supabase is optional until you need multi-device persistence.
+
+---
+
+## Complete Supabase TODO Checklist
+
+### ✅ Already Complete
+- [x] `projects` table migration (if using Supabase for projects)
+- [x] `project_proformas` table migration file exists
+
+### 🔴 Required for Feature 4 (Data Sources)
+
+#### 1. Apply Feature 4 Migration
+Run the SQL provided in the "Feature 4 — Project Sources" section above (lines 264-343).
+
+#### 2. Create Storage Bucket
+**Via Supabase Dashboard:**
+1. Go to **Storage** in your Supabase dashboard
+2. Click **New bucket**
+3. Bucket name: `project-sources`
+4. **Public bucket**: Choose `Public` for easier testing (recommended for MVP)
+   - Files will be accessible via direct URL
+   - Simpler to implement
+5. **Private bucket**: Choose `Private` for production security
+   - Requires signed URLs for access
+   - More secure but adds complexity
+6. Click **Create bucket**
+
+**Object Key Convention:**
+- All files should use path: `${projectId}/${sourceId}/${fileName}`
+- Example: `abc123-456-789/source-uuid-123/council-report.pdf`
+
+#### 3. Uncomment Supabase Code in Feature 4
+**File: `lib/sources/queries.ts`**
+- Find line ~40+ with comment `// SUPABASE INTEGRATION:`
+- Comment out: `return getMockProjectSources(projectId, params);`
+- Uncomment the Supabase query implementation below it
+
+**File: `lib/sources/actions.ts`**
+- Comment out all `createMockSource()`, `updateMockSource()`, `deleteMockSource()` calls
+- Uncomment the real Supabase implementations
+
+#### 4. Implement File Upload in AddSourceDialog
+**File: `components/sources/dialogs/AddSourceDialog.tsx` (or `components/sources/AddSourceDialog.tsx` if using that one)**
+
+Current code generates a mock path. Replace with real upload:
+
+```typescript
+// BEFORE (mock):
+const storage_path = `mock/${projectId}/${crypto.randomUUID()}/${file.name}`;
+
+// AFTER (real Supabase upload):
+const sourceId = crypto.randomUUID();
+const filePath = `${projectId}/${sourceId}/${file.name}`;
+
+const supabase = createBrowserClient(); // Import from @/lib/supabase/client
+
+const { data: uploadData, error: uploadError } = await supabase.storage
+  .from('project-sources')
+  .upload(filePath, file, {
+    cacheControl: '3600',
+    upsert: false
+  });
+
+if (uploadError) {
+  setError(uploadError.message);
+  return;
+}
+
+const storage_path = filePath; // Use this in createSource call
+```
+
+**Add upload progress (optional):**
+```typescript
+const { data, error } = await supabase.storage
+  .from('project-sources')
+  .upload(filePath, file, {
+    cacheControl: '3600',
+    upsert: false,
+    onUploadProgress: (progress) => {
+      const percent = (progress.loaded / progress.total) * 100;
+      setUploadProgress(percent);
+    }
+  });
+```
+
+#### 5. Implement File Download/Viewing
+
+**For Public Bucket:**
+```typescript
+// In your table or actions menu component
+const supabase = createBrowserClient();
+
+const { data } = supabase.storage
+  .from('project-sources')
+  .getPublicUrl(source.storage_path);
+
+const fileUrl = data.publicUrl;
+// Use fileUrl to open in new tab or download
+window.open(fileUrl, '_blank');
+```
+
+**For Private Bucket:**
+```typescript
+const supabase = createBrowserClient();
+
+const { data, error } = await supabase.storage
+  .from('project-sources')
+  .createSignedUrl(source.storage_path, 3600); // 1 hour expiry
+
+if (data) {
+  window.open(data.signedUrl, '_blank');
+}
+```
+
+#### 6. Implement File Deletion (Optional)
+**File: `lib/sources/actions.ts`**
+
+In the `deleteSource` function, add storage cleanup:
+
+```typescript
+// After deleting the database record
+if (source.storage_path) {
+  const supabase = createServerClient();
+  await supabase.storage
+    .from('project-sources')
+    .remove([source.storage_path]);
+  // Don't block on errors - best effort cleanup
+}
+```
+
+### 🟡 Optional (Production Enhancements)
+
+#### Enable RLS for Feature 4
+Once authentication is implemented:
+
+```sql
+-- Enable RLS on project_sources table
+alter table public.project_sources enable row level security;
+
+-- Policy: Users can only read sources for their projects
+create policy "Users can read their project sources"
+on public.project_sources for select
+using (
+  project_id in (
+    select id from public.projects where owner_id = auth.uid()
+  )
+);
+
+-- Policy: Users can insert sources for their projects
+create policy "Users can insert sources to their projects"
+on public.project_sources for insert
+with check (
+  project_id in (
+    select id from public.projects where owner_id = auth.uid()
+  )
+);
+
+-- Policy: Users can update sources for their projects
+create policy "Users can update their project sources"
+on public.project_sources for update
+using (
+  project_id in (
+    select id from public.projects where owner_id = auth.uid()
+  )
+);
+
+-- Policy: Users can delete sources for their projects
+create policy "Users can delete their project sources"
+on public.project_sources for delete
+using (
+  project_id in (
+    select id from public.projects where owner_id = auth.uid()
+  )
+);
+```
+
+#### Storage Bucket Policies (if using private bucket)
+```sql
+-- Allow authenticated users to upload to their project folders
+create policy "Users can upload to their project folders"
+on storage.objects for insert
+with check (
+  bucket_id = 'project-sources' and
+  (storage.foldername(name))[1] in (
+    select id::text from public.projects where owner_id = auth.uid()
+  )
+);
+
+-- Allow users to read files from their project folders
+create policy "Users can read their project files"
+on storage.objects for select
+using (
+  bucket_id = 'project-sources' and
+  (storage.foldername(name))[1] in (
+    select id::text from public.projects where owner_id = auth.uid()
+  )
+);
+
+-- Allow users to delete files from their project folders
+create policy "Users can delete their project files"
+on storage.objects for delete
+using (
+  bucket_id = 'project-sources' and
+  (storage.foldername(name))[1] in (
+    select id::text from public.projects where owner_id = auth.uid()
+  )
+);
+```
+
+---
+
+## Summary of Implementation Status
+
+| Feature | Database | Storage | Code Integration | Status |
+|---------|----------|---------|------------------|--------|
+| **Feature 4 (Sources)** | ❌ Migration not applied | ❌ Bucket not created | ⚠️ Code commented out | **Needs Setup** |
+| **Feature 5 (Pro Forma)** | ✅ Migration file exists | N/A | ⚠️ Using mock (optional) | **Optional** |
+| **Feature 6 (AI Chat)** | N/A (uses localStorage) | N/A | ✅ Complete | **Done** |
+
+### Quick Start Checklist
+
+To enable full Supabase integration:
+
+1. **Feature 4 Prerequisites:**
+   - [ ] Run Feature 4 migration SQL in Supabase
+   - [ ] Create `project-sources` storage bucket (public or private)
+   - [ ] Uncomment Supabase code in `lib/sources/queries.ts`
+   - [ ] Uncomment Supabase code in `lib/sources/actions.ts`
+   - [ ] Implement file upload in `AddSourceDialog.tsx`
+   - [ ] Test file upload/download flow
+   - [ ] (Optional) Implement file deletion
+
+2. **Feature 5 Prerequisites:**
+   - [ ] Run Feature 5 migration SQL in Supabase (if not already done)
+   - [ ] Uncomment Supabase code in `lib/proforma/queries.ts`
+   - [ ] Uncomment Supabase code in `lib/proforma/actions.ts`
+   - [ ] Test save/load flow
+
+3. **Production Hardening (Later):**
+   - [ ] Enable RLS on all tables
+   - [ ] Add storage bucket policies
+   - [ ] Implement signed URLs if using private bucket
+   - [ ] Add error logging for failed uploads/deletes
+
+---
+
 ## Additional Resources
 
 - [Supabase Documentation](https://supabase.com/docs)
 - [Supabase Next.js Guide](https://supabase.com/docs/guides/getting-started/quickstarts/nextjs)
 - [Row Level Security Guide](https://supabase.com/docs/guides/auth/row-level-security)
+- [Supabase Storage Guide](https://supabase.com/docs/guides/storage)
 - [Supabase CLI Reference](https://supabase.com/docs/reference/cli/introduction)
 
 ## Support

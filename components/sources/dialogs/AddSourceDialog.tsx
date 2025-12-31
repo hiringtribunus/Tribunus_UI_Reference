@@ -219,7 +219,7 @@ export function AddSourceDialog({
                 <Select
                   value={formData.kind}
                   onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, kind: value }))
+                    setFormData((prev) => ({ ...prev, kind: value as import("@/lib/sources/types").SourceKind }))
                   }
                 >
                   <SelectTrigger id="kind" className="h-10 rounded-sm border-border bg-surface">

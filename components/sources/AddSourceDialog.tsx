@@ -147,13 +147,13 @@ export function AddSourceDialog({
         tab === "link"
           ? {
               format: "url" as const,
-              kind: form.kind,
+              kind: form.kind as import("@/lib/sources/types").SourceKind,
               title: form.title.trim(),
               url: form.url.trim(),
             }
           : {
               format: "file" as const,
-              kind: form.kind,
+              kind: form.kind as import("@/lib/sources/types").SourceKind,
               title: form.title.trim(),
               storage_path: `${projectId}/${sourceId}/${file?.name}`,
               mime_type: file?.type || null,

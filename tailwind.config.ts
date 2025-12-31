@@ -27,7 +27,25 @@ const config: Config = {
   			success: 'var(--success)',
   			warning: 'var(--warning)',
   			danger: 'var(--danger)',
-  			info: 'var(--info)'
+  			info: 'var(--info)',
+  			// Shadcn/ui semantic colors mapped to design tokens
+  			background: 'var(--bg)',
+  			foreground: 'var(--text)',
+  			muted: 'var(--surface-2)',
+  			'muted-foreground': 'var(--text-3)',
+  			primary: 'var(--accent)',
+  			'primary-foreground': '#FFFFFF',
+  			secondary: 'var(--surface-2)',
+  			'secondary-foreground': 'var(--text)',
+  			destructive: 'var(--danger)',
+  			'destructive-foreground': '#FFFFFF',
+  			ring: 'var(--accent)',
+  			input: 'var(--border)',
+  			popover: 'var(--bg)',
+  			'popover-foreground': 'var(--text)',
+  			card: 'var(--bg)',
+  			'card-foreground': 'var(--text)',
+  			'accent-foreground': '#FFFFFF'
   		},
   		borderRadius: {
   			xs: 'var(--radius-xs)',

@@ -20,10 +20,7 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
     <nav className="flex flex-col h-full bg-surface">
       {/* Brand section */}
       <div className="flex items-center gap-2 px-4 py-6 border-b border-border">
-        <div className="w-8 h-8 rounded-md bg-accent flex items-center justify-center">
-          <span className="text-white font-bold text-sm">T</span>
-        </div>
-        <span className="font-semibold text-base text-text">Tribunus AI</span>
+        <span className="font-bold text-base text-text">TRIBUNUS</span>
       </div>
 
       {/* Navigation items */}

@@ -432,7 +432,7 @@ export async function updateMockSource(
   if (index === -1) return null;
 
   const existing = mockSources[index];
-  const nextFormat = input.format ?? existing.format;
+  const nextFormat = existing.format; // Format cannot be changed in updates
 
   const updated: ProjectSource = {
     ...existing,

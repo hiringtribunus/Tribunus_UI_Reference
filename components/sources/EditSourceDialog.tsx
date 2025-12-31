@@ -164,7 +164,7 @@ export function EditSourceDialog({
               <Label htmlFor="kind">Kind</Label>
               <Select
                 value={form.kind}
-                onValueChange={(value) => setForm({ ...form, kind: value })}
+                onValueChange={(value) => setForm({ ...form, kind: value as import("@/lib/sources/types").SourceKind })}
                 disabled={isPending}
               >
                 <SelectTrigger className="h-10 rounded-sm">
