@@ -435,7 +435,7 @@ export function ZoningMap({ center, pin, zones, className }: ZoningMapProps) {
 
               <button
                 onClick={() => setIsMaximized(false)}
-                className="p-1 hover:bg-surface-2 rounded-sm transition-colors"
+                className="p-1 hover:bg-surface-2 rounded-sm transition-colors ml-auto"
                 title="Minimize map"
               >
                 <Minimize2 className="h-5 w-5 text-text-2" />
