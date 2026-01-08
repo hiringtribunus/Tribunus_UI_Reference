@@ -22,7 +22,7 @@ import { SiteLegalSection } from "./SiteLegalSection";
 import { PlanningSection } from "./PlanningSection";
 import { ProposalSection } from "./ProposalSection";
 import { DocumentChecklistSection } from "./DocumentChecklistSection";
-import { ZoningPlaceholderMap } from "@/components/maps/ZoningPlaceholderMap";
+import { ZoningMap } from "@/components/maps/ZoningMap";
 
 interface ProjectProfileClientProps {
   initialProject: Project;
@@ -190,8 +190,8 @@ export function ProjectProfileClient({
         {/* Right: Map (1/3 width on desktop, sticky) */}
         <div className="lg:col-span-1">
           <div className="sticky top-6 border border-border rounded-md p-4 bg-white">
-            <h3 className="text-base font-medium text-text mb-3">Zoning Map</h3>
-            <ZoningPlaceholderMap
+            <h3 className="text-base font-medium text-text mb-3">Site Map</h3>
+            <ZoningMap
               center={center}
               pin={pin}
               zones={zones}
