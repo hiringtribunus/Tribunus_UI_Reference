@@ -14,6 +14,7 @@ import { ProFormaHeader } from "@/components/proforma/ProFormaHeader";
 import { AssumptionsForm } from "@/components/proforma/AssumptionsForm";
 import { ScenarioControls } from "@/components/proforma/ScenarioControls";
 import { OutputsPanel } from "@/components/proforma/OutputsPanel";
+import { MonthlyCashflowBreakdown } from "@/components/proforma/MonthlyCashflowBreakdown";
 
 type Project = {
   id: string;
@@ -161,7 +162,7 @@ export function ProFormaClient({
           />
         </div>
 
-        <div className="px-6 pb-6">
+        <div className="px-6 pb-6 space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left: Assumptions + Scenario */}
             <div className="lg:col-span-2 space-y-4">
@@ -177,6 +178,9 @@ export function ProFormaClient({
               />
             </div>
           </div>
+
+          {/* Monthly Cashflow Breakdown - Full Width at Bottom */}
+          <MonthlyCashflowBreakdown monthlyRows={scenarioOutputs.monthly.rows} />
         </div>
       </div>
     </div>

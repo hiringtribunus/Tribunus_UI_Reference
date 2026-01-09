@@ -9,45 +9,10 @@ interface MetaTogglesProps {
 }
 
 export function MetaToggles({ form }: MetaTogglesProps) {
-  const assetType = form.watch("meta.assetType");
   const monetization = form.watch("meta.monetization");
 
   return (
     <div className="space-y-6 mb-6 p-6 bg-white border rounded-md">
-      <div>
-        <Label className="text-sm font-medium mb-3 block">Asset Type</Label>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => form.setValue("meta.assetType", "TOWNHOME", { shouldDirty: true })}
-            className={`
-              px-6 py-2.5 rounded-sm text-sm font-medium transition-colors
-              ${
-                assetType === "TOWNHOME"
-                  ? "bg-accent text-white"
-                  : "bg-surface border border-gray-300 text-gray-700 hover:bg-surface-2"
-              }
-            `}
-          >
-            Townhome
-          </button>
-          <button
-            type="button"
-            onClick={() => form.setValue("meta.assetType", "MULTIFAMILY", { shouldDirty: true })}
-            className={`
-              px-6 py-2.5 rounded-sm text-sm font-medium transition-colors
-              ${
-                assetType === "MULTIFAMILY"
-                  ? "bg-accent text-white"
-                  : "bg-surface border border-gray-300 text-gray-700 hover:bg-surface-2"
-              }
-            `}
-          >
-            Multifamily
-          </button>
-        </div>
-      </div>
-
       <div>
         <Label className="text-sm font-medium mb-3 block">Monetization</Label>
         <div className="flex gap-2">

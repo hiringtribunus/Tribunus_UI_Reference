@@ -1,32 +1,15 @@
 "use client";
 
-import { useState } from "react";
 import type { ProFormaOutputs } from "@/lib/proforma/types";
 import {
   formatCAD,
   formatPercent,
   formatDelta,
   formatPercentDelta,
-  formatPhase,
-  getPhaseColor,
 } from "@/lib/utils/formatting";
 import { computeDelta } from "@/lib/proforma/compute";
 import { cn } from "@/lib/cn";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { ChevronDown, Info } from "lucide-react";
+import { Info } from "lucide-react";
 
 type OutputsPanelProps = {
   baseOutputs: ProFormaOutputs;
@@ -37,8 +20,6 @@ export function OutputsPanel({
   baseOutputs,
   scenarioOutputs,
 }: OutputsPanelProps) {
-  const [showAllMonths, setShowAllMonths] = useState(false);
-
   // Compute deltas
   const profitDelta = computeDelta(
     baseOutputs.totals.profit,
@@ -56,11 +37,6 @@ export function OutputsPanel({
   const profitValue = scenarioOutputs.totals.profit;
   const isProfitPositive = profitValue !== null && profitValue > 0;
   const isProfitNegative = profitValue !== null && profitValue < 0;
-
-  const monthlyRows = scenarioOutputs.monthly.rows;
-  const displayRows = showAllMonths
-    ? monthlyRows
-    : monthlyRows.slice(0, 24);
 
   return (
     <div className="space-y-4">
@@ -146,99 +122,6 @@ export function OutputsPanel({
         </div>
       </div>
 
-      {/* Monthly Breakdown */}
-      {monthlyRows.length > 0 && (
-        <Collapsible>
-          <CollapsibleTrigger className="flex items-center justify-between w-full p-4 border rounded-md hover:bg-gray-50">
-            <span className="font-medium">
-              Monthly Cashflow Breakdown ({monthlyRows.length} months)
-            </span>
-            <ChevronDown className="h-4 w-4" />
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className="mt-2 border rounded-md overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-16">Month</TableHead>
-                    <TableHead>Phase</TableHead>
-                    <TableHead className="text-right">Land</TableHead>
-                    <TableHead className="text-right">Soft</TableHead>
-                    <TableHead className="text-right">Hard</TableHead>
-                    <TableHead className="text-right">Interest</TableHead>
-                    <TableHead className="text-right">Loan Draw</TableHead>
-                    <TableHead className="text-right">Equity</TableHead>
-                    <TableHead className="text-right">Sales Revenue</TableHead>
-                    <TableHead className="text-right">Debt Balance</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {displayRows.map((row) => (
-                    <TableRow key={row.monthIndex}>
-                      <TableCell className="font-medium">
-                        {row.monthIndex}
-                      </TableCell>
-                      <TableCell>
-                        <span
-                          className={cn(
-                            "inline-block px-2 py-0.5 text-xs rounded-full",
-                            getPhaseColor(row.phase)
-                          )}
-                        >
-                          {formatPhase(row.phase)}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right text-sm">
-                        {row.land > 0 ? formatCAD(row.land) : "—"}
-                      </TableCell>
-                      <TableCell className="text-right text-sm">
-                        {row.soft > 0 ? formatCAD(row.soft) : "—"}
-                      </TableCell>
-                      <TableCell className="text-right text-sm">
-                        {row.hard > 0 ? formatCAD(row.hard) : "—"}
-                      </TableCell>
-                      <TableCell className="text-right text-sm">
-                        {row.interest > 0 ? formatCAD(row.interest) : "—"}
-                      </TableCell>
-                      <TableCell className="text-right text-sm">
-                        {row.loanDraw > 0 ? formatCAD(row.loanDraw) : "—"}
-                      </TableCell>
-                      <TableCell
-                        className={cn(
-                          "text-right text-sm font-medium",
-                          row.equity < 0 && "text-red-600",
-                          row.equity > 0 && "text-green-600"
-                        )}
-                      >
-                        {formatCAD(row.equity)}
-                      </TableCell>
-                      <TableCell className="text-right text-sm">
-                        {row.salesRevenue > 0 ? formatCAD(row.salesRevenue) : "—"}
-                      </TableCell>
-                      <TableCell className="text-right text-sm font-medium">
-                        {formatCAD(row.debtOutstanding)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-            {monthlyRows.length > 24 && (
-              <div className="mt-2 flex justify-center">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowAllMonths(!showAllMonths)}
-                >
-                  {showAllMonths
-                    ? "Show first 24 months"
-                    : `Show all ${monthlyRows.length} months`}
-                </Button>
-              </div>
-            )}
-          </CollapsibleContent>
-        </Collapsible>
-      )}
     </div>
   );
 }

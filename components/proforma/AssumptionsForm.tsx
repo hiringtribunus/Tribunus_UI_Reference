@@ -21,7 +21,6 @@ export function AssumptionsForm({ form }: AssumptionsFormProps) {
   const { register, formState, watch, setValue } = form;
   const { errors } = formState;
 
-  const assetType = watch("meta.assetType");
   const autoCalcSalesMonths = watch("timeline.autoCalcSalesMonths");
   const entitlementMonths = watch("timeline.phases.entitlementMonths");
   const constructionMonths = watch("timeline.phases.constructionMonths");
@@ -84,28 +83,6 @@ export function AssumptionsForm({ form }: AssumptionsFormProps) {
                   </p>
                 )}
               </div>
-              {assetType === "MULTIFAMILY" && (
-                <div>
-                  <Label htmlFor="program.netToGrossPct">
-                    Net to Gross Ratio (%)
-                  </Label>
-                  <Input
-                    id="program.netToGrossPct"
-                    type="number"
-                    step="0.1"
-                    {...register("program.netToGrossPct", {
-                      valueAsNumber: true,
-                    })}
-                    className="mt-1"
-                    placeholder="80"
-                  />
-                  {errors.program?.netToGrossPct && (
-                    <p className="text-sm text-red-600 mt-1">
-                      {errors.program.netToGrossPct.message}
-                    </p>
-                  )}
-                </div>
-              )}
             </div>
           </AccordionContent>
         </AccordionItem>
