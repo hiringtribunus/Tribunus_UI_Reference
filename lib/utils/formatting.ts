@@ -16,6 +16,21 @@ export function formatCAD(value: number | null | undefined): string {
 }
 
 /**
+ * Format a number as Canadian dollars with cents (2 decimal places).
+ * Returns '—' if value is null or undefined.
+ */
+export function formatCADWithCents(value: number | null | undefined): string {
+  if (value === null || value === undefined) return "—";
+
+  return new Intl.NumberFormat("en-CA", {
+    style: "currency",
+    currency: "CAD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
+/**
  * Format a number as a percentage.
  * Returns '—' if value is null or undefined.
  */

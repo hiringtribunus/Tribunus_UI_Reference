@@ -1,4 +1,4 @@
-import { FolderKanban, Calculator, Sparkles, Settings, type LucideIcon } from "lucide-react";
+import { FolderKanban, Calculator, Sparkles, Receipt, Settings, type LucideIcon } from "lucide-react";
 
 export interface NavItem {
   key: string;
@@ -33,6 +33,13 @@ export const navItems: NavItem[] = [
     href: "/ai",
     icon: Sparkles,
     title: "Tribunus AI",
+  },
+  {
+    key: "fee-calculator",
+    label: "Fee Calculator",
+    href: "/fee-calculator",
+    icon: Receipt,
+    title: "Fee Calculator",
   },
   {
     key: "settings",

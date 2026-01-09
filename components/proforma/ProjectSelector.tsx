@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   Select,
   SelectContent,
@@ -17,16 +17,21 @@ type Project = {
 type ProjectSelectorProps = {
   projects: Project[];
   selectedProjectId: string | null;
+  basePath?: string; // Optional basePath prop, defaults to current pathname
 };
 
 export function ProjectSelector({
   projects,
   selectedProjectId,
+  basePath,
 }: ProjectSelectorProps) {
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleChange = (projectId: string) => {
-    router.push(`/proforma?projectId=${projectId}`);
+    // Use basePath if provided, otherwise use current pathname
+    const path = basePath ?? pathname;
+    router.push(`${path}?projectId=${projectId}`);
   };
 
   return (
