@@ -13,16 +13,14 @@ type ScenarioControlsProps = {
 export function ScenarioControls({ form }: ScenarioControlsProps) {
   const { setValue, watch } = form;
 
-  const deltaSalePricePerSqftPct = watch("scenario.deltaSalePricePerSqftPct");
-  const deltaHardCostPerSqftPct = watch("scenario.deltaHardCostPerSqftPct");
-  const deltaInterestRatePct = watch("scenario.deltaInterestRatePct");
-  const deltaTotalMonths = watch("scenario.deltaTotalMonths");
+  const deltaRevenuePct = watch("scenario.deltaRevenuePct");
+  const deltaHardCostPct = watch("scenario.deltaHardCostPct");
+  const deltaDurationMonths = watch("scenario.deltaDurationMonths");
 
   const handleReset = () => {
-    setValue("scenario.deltaSalePricePerSqftPct", 0);
-    setValue("scenario.deltaHardCostPerSqftPct", 0);
-    setValue("scenario.deltaInterestRatePct", 0);
-    setValue("scenario.deltaTotalMonths", 0);
+    setValue("scenario.deltaRevenuePct", 0);
+    setValue("scenario.deltaHardCostPct", 0);
+    setValue("scenario.deltaDurationMonths", 0);
   };
 
   return (
@@ -35,27 +33,24 @@ export function ScenarioControls({ form }: ScenarioControlsProps) {
       </div>
 
       <div className="space-y-4">
-        {/* Sale Price Delta */}
+        {/* Revenue Delta */}
         <div>
           <div className="flex items-center justify-between mb-1">
-            <Label htmlFor="scenario-sale-price">Sale Price Delta</Label>
+            <Label htmlFor="scenario-revenue">Revenue Delta</Label>
             <span className="text-sm font-medium">
-              {deltaSalePricePerSqftPct > 0 ? "+" : ""}
-              {deltaSalePricePerSqftPct}%
+              {deltaRevenuePct > 0 ? "+" : ""}
+              {deltaRevenuePct}%
             </span>
           </div>
           <input
-            id="scenario-sale-price"
+            id="scenario-revenue"
             type="range"
-            min={scenarioRanges.deltaSalePricePerSqftPct.min}
-            max={scenarioRanges.deltaSalePricePerSqftPct.max}
-            step={scenarioRanges.deltaSalePricePerSqftPct.step}
-            value={deltaSalePricePerSqftPct}
+            min={scenarioRanges.deltaRevenuePct.min}
+            max={scenarioRanges.deltaRevenuePct.max}
+            step={scenarioRanges.deltaRevenuePct.step}
+            value={deltaRevenuePct}
             onChange={(e) =>
-              setValue(
-                "scenario.deltaSalePricePerSqftPct",
-                parseFloat(e.target.value)
-              )
+              setValue("scenario.deltaRevenuePct", parseFloat(e.target.value))
             }
             className="w-full"
           />
@@ -66,45 +61,19 @@ export function ScenarioControls({ form }: ScenarioControlsProps) {
           <div className="flex items-center justify-between mb-1">
             <Label htmlFor="scenario-hard-cost">Hard Cost Delta</Label>
             <span className="text-sm font-medium">
-              {deltaHardCostPerSqftPct > 0 ? "+" : ""}
-              {deltaHardCostPerSqftPct}%
+              {deltaHardCostPct > 0 ? "+" : ""}
+              {deltaHardCostPct}%
             </span>
           </div>
           <input
             id="scenario-hard-cost"
             type="range"
-            min={scenarioRanges.deltaHardCostPerSqftPct.min}
-            max={scenarioRanges.deltaHardCostPerSqftPct.max}
-            step={scenarioRanges.deltaHardCostPerSqftPct.step}
-            value={deltaHardCostPerSqftPct}
+            min={scenarioRanges.deltaHardCostPct.min}
+            max={scenarioRanges.deltaHardCostPct.max}
+            step={scenarioRanges.deltaHardCostPct.step}
+            value={deltaHardCostPct}
             onChange={(e) =>
-              setValue(
-                "scenario.deltaHardCostPerSqftPct",
-                parseFloat(e.target.value)
-              )
-            }
-            className="w-full"
-          />
-        </div>
-
-        {/* Interest Rate Delta */}
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <Label htmlFor="scenario-interest">Interest Rate Delta</Label>
-            <span className="text-sm font-medium">
-              {deltaInterestRatePct > 0 ? "+" : ""}
-              {deltaInterestRatePct.toFixed(1)}pp
-            </span>
-          </div>
-          <input
-            id="scenario-interest"
-            type="range"
-            min={scenarioRanges.deltaInterestRatePct.min}
-            max={scenarioRanges.deltaInterestRatePct.max}
-            step={scenarioRanges.deltaInterestRatePct.step}
-            value={deltaInterestRatePct}
-            onChange={(e) =>
-              setValue("scenario.deltaInterestRatePct", parseFloat(e.target.value))
+              setValue("scenario.deltaHardCostPct", parseFloat(e.target.value))
             }
             className="w-full"
           />
@@ -113,21 +82,21 @@ export function ScenarioControls({ form }: ScenarioControlsProps) {
         {/* Duration Delta */}
         <div>
           <div className="flex items-center justify-between mb-1">
-            <Label htmlFor="scenario-duration">Total Duration Delta (months)</Label>
+            <Label htmlFor="scenario-duration">Duration Delta (months)</Label>
             <span className="text-sm font-medium">
-              {deltaTotalMonths > 0 ? "+" : ""}
-              {deltaTotalMonths} months
+              {deltaDurationMonths > 0 ? "+" : ""}
+              {deltaDurationMonths} months
             </span>
           </div>
           <input
             id="scenario-duration"
             type="range"
-            min={scenarioRanges.deltaTotalMonths.min}
-            max={scenarioRanges.deltaTotalMonths.max}
-            step={scenarioRanges.deltaTotalMonths.step}
-            value={deltaTotalMonths}
+            min={scenarioRanges.deltaDurationMonths.min}
+            max={scenarioRanges.deltaDurationMonths.max}
+            step={scenarioRanges.deltaDurationMonths.step}
+            value={deltaDurationMonths}
             onChange={(e) =>
-              setValue("scenario.deltaTotalMonths", parseInt(e.target.value))
+              setValue("scenario.deltaDurationMonths", parseInt(e.target.value))
             }
             className="w-full"
           />

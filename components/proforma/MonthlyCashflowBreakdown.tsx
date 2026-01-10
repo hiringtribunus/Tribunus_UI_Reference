@@ -62,7 +62,7 @@ export function MonthlyCashflowBreakdown({
             <TableBody>
               {/* Phase Row */}
               <TableRow>
-                <TableCell className="sticky left-0 bg-white z-10 border-r font-medium min-w-[140px] w-[140px] text-center min-w-[140px] w-[140px]">
+                <TableCell className="sticky left-0 bg-white z-10 border-r font-medium min-w-[140px] w-[140px] text-center">
                   Phase
                 </TableCell>
                 {monthlyRows.map((row) => (
@@ -79,26 +79,14 @@ export function MonthlyCashflowBreakdown({
                 ))}
               </TableRow>
 
-              {/* Land Row */}
+              {/* Land & Soft Row */}
               <TableRow>
                 <TableCell className="sticky left-0 bg-white z-10 border-r font-medium min-w-[140px] w-[140px] text-center">
-                  Land
+                  Land & Soft
                 </TableCell>
                 {monthlyRows.map((row) => (
                   <TableCell key={row.monthIndex} className="text-right text-sm">
-                    {row.land > 0 ? formatCAD(row.land) : "—"}
-                  </TableCell>
-                ))}
-              </TableRow>
-
-              {/* Soft Row */}
-              <TableRow>
-                <TableCell className="sticky left-0 bg-white z-10 border-r font-medium min-w-[140px] w-[140px] text-center">
-                  Soft
-                </TableCell>
-                {monthlyRows.map((row) => (
-                  <TableCell key={row.monthIndex} className="text-right text-sm">
-                    {row.soft > 0 ? formatCAD(row.soft) : "—"}
+                    {(row.land + row.soft) > 0 ? formatCAD(row.land + row.soft) : "—"}
                   </TableCell>
                 ))}
               </TableRow>
@@ -115,72 +103,20 @@ export function MonthlyCashflowBreakdown({
                 ))}
               </TableRow>
 
-              {/* Interest Row */}
+              {/* Revenue Row */}
               <TableRow>
                 <TableCell className="sticky left-0 bg-white z-10 border-r font-medium min-w-[140px] w-[140px] text-center">
-                  Interest
-                </TableCell>
-                {monthlyRows.map((row) => (
-                  <TableCell key={row.monthIndex} className="text-right text-sm">
-                    {row.interest > 0 ? formatCAD(row.interest) : "—"}
-                  </TableCell>
-                ))}
-              </TableRow>
-
-              {/* Loan Draw Row */}
-              <TableRow>
-                <TableCell className="sticky left-0 bg-white z-10 border-r font-medium min-w-[140px] w-[140px] text-center">
-                  Loan Draw
-                </TableCell>
-                {monthlyRows.map((row) => (
-                  <TableCell key={row.monthIndex} className="text-right text-sm">
-                    {row.loanDraw > 0 ? formatCAD(row.loanDraw) : "—"}
-                  </TableCell>
-                ))}
-              </TableRow>
-
-              {/* Equity Row */}
-              <TableRow>
-                <TableCell className="sticky left-0 bg-white z-10 border-r font-medium min-w-[140px] w-[140px] text-center">
-                  Equity
+                  Revenue
                 </TableCell>
                 {monthlyRows.map((row) => (
                   <TableCell
                     key={row.monthIndex}
                     className={cn(
-                      "text-right text-sm font-medium",
-                      row.equity < 0 && "text-red-600",
-                      row.equity > 0 && "text-green-600"
+                      "text-right text-sm",
+                      row.revenue > 0 && "text-green-600 font-medium"
                     )}
                   >
-                    {formatCAD(row.equity)}
-                  </TableCell>
-                ))}
-              </TableRow>
-
-              {/* Sales Revenue Row */}
-              <TableRow>
-                <TableCell className="sticky left-0 bg-white z-10 border-r font-medium min-w-[140px] w-[140px] text-center">
-                  Sales Revenue
-                </TableCell>
-                {monthlyRows.map((row) => (
-                  <TableCell key={row.monthIndex} className="text-right text-sm">
-                    {row.salesRevenue > 0 ? formatCAD(row.salesRevenue) : "—"}
-                  </TableCell>
-                ))}
-              </TableRow>
-
-              {/* Debt Balance Row */}
-              <TableRow>
-                <TableCell className="sticky left-0 bg-white z-10 border-r font-medium min-w-[140px] w-[140px] text-center">
-                  Debt Balance
-                </TableCell>
-                {monthlyRows.map((row) => (
-                  <TableCell
-                    key={row.monthIndex}
-                    className="text-right text-sm font-medium"
-                  >
-                    {formatCAD(row.debtOutstanding)}
+                    {row.revenue > 0 ? formatCAD(row.revenue) : "—"}
                   </TableCell>
                 ))}
               </TableRow>

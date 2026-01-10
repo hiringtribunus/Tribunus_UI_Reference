@@ -16,73 +16,58 @@ const metaSchema = z.object({
   monetization: monetizationSchema,
 });
 
-// Program validation
+// Program & Density validation
 const programSchema = z.object({
   units: z.number().int().min(1).max(50000).nullable(),
-  saleableAreaSqft: z.number().min(1).max(5000000).nullable(),
-  netToGrossPct: z.number().min(30).max(95).nullable(), // For multifamily
+  siteAreaSqft: z.number().min(1).max(50000000).nullable(),
+  fsr: z.number().min(0.1).max(20).nullable(), // Floor Space Ratio
+  efficiencyPct: z.number().min(50).max(100).nullable(), // Efficiency %
 });
 
 // Acquisition validation
 const acquisitionSchema = z.object({
-  landPrice: nullableNumber,
-  closingCostsPct: nullablePercent,
+  landPurchasePrice: nullableNumber,
+  capitalizedLandCost: nullableNumber,
 });
 
-// Revenue - For Sale validation
-const revenueSaleSchema = z.object({
-  salePricePerSqft: nullableNumber,
-  otherRevenue: nullableNumber,
-  salesCommissionPct: nullablePercent,
+// Revenue validation
+const revenueSchema = z.object({
+  totalRevenue: nullableNumber,
+  sellingCostPct: nullablePercent,
+  sellingCostAddBack: nullableNumber,
 });
 
-// Revenue - For Rent validation (Phase 1 placeholder)
-const revenueRentSchema = z.object({
-  avgRentPerUnitMonthly: nullableNumber,
-  vacancyPct: nullablePercent,
-});
-
-// Costs validation
-const costsSchema = z.object({
-  hardCostPerSqft: nullableNumber,
-  softCostPctOfHard: nullablePercent,
-  contingencyPctOfHard: nullablePercent,
-  contingencyPctOfSoft: nullablePercent,
-  devFeePctOfCost: nullablePercent,
-});
-
-// Financing validation (removed interestCoverageFactor)
-const financingSchema = z.object({
-  loanToCostPct: nullablePercent,
-  interestRatePct: nullablePercent,
-  lenderFeePct: nullablePercent,
-});
-
-// Timeline phases validation
-const phasesSchema = z.object({
-  entitlementMonths: z.number().int().min(0).max(120).nullable(),
-  constructionMonths: z.number().int().min(0).max(120).nullable(),
-  salesLeaseMonths: z.number().int().min(0).max(120).nullable(),
-});
-
-// Timeline validation with phases
+// Timeline validation (3 phases)
 const timelineSchema = z.object({
-  phases: phasesSchema,
-  totalMonths: z.number().int().min(1).max(240).nullable(),
-  autoCalcSalesMonths: z.boolean(),
+  landEntitlementMonths: z.number().int().min(0).max(120).nullable(),
+  servicingMonths: z.number().int().min(0).max(120).nullable(),
+  constructionMonths: z.number().int().min(0).max(120).nullable(),
 });
 
-// Absorption validation
-const absorptionSchema = z.object({
-  unitsPerMonth: z.number().min(0.1).max(500).nullable(),
+// Soft Costs validation
+const softCostsSchema = z.object({
+  consultants: nullableNumber,
+  municipalPermitFees: nullableNumber,
+  otherSoftCosts: nullableNumber,
+  marketing: nullableNumber,
+  finance: nullableNumber,
+  contingencyPct: nullablePercent,
+});
+
+// Hard Costs validation
+const hardCostsSchema = z.object({
+  totalConstructionHardCost: nullableNumber,
+  constructionManagement: nullableNumber,
+  landServicingOffsite: nullableNumber,
+  landServicingOnsite: nullableNumber,
+  contingencyPct: nullablePercent,
 });
 
 // Scenario validation (not nullable, defaults to 0)
 const scenarioSchema = z.object({
-  deltaSalePricePerSqftPct: z.number().min(-10).max(10),
-  deltaHardCostPerSqftPct: z.number().min(-10).max(10),
-  deltaInterestRatePct: z.number().min(-2).max(2), // Absolute points
-  deltaTotalMonths: z.number().int().min(-6).max(6),
+  deltaRevenuePct: z.number().min(-20).max(20),
+  deltaHardCostPct: z.number().min(-20).max(20),
+  deltaDurationMonths: z.number().int().min(-12).max(12),
 });
 
 // Complete assumptions schema
@@ -90,12 +75,10 @@ export const assumptionsSchema = z.object({
   meta: metaSchema,
   program: programSchema,
   acquisition: acquisitionSchema,
-  revenueSale: revenueSaleSchema,
-  revenueRent: revenueRentSchema,
-  costs: costsSchema,
-  financing: financingSchema,
+  revenue: revenueSchema,
   timeline: timelineSchema,
-  absorption: absorptionSchema,
+  softCosts: softCostsSchema,
+  hardCosts: hardCostsSchema,
   scenario: scenarioSchema,
 });
 

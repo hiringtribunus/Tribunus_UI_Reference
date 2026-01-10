@@ -68,13 +68,14 @@ export async function ensureMockProForma(
  */
 export function seedFromProfile(
   units: number | null,
-  saleableAreaSqft: number | null
+  _saleableAreaSqft: number | null // Unused in new structure - user enters site area, FSR, efficiency
 ): Partial<ProFormaAssumptions> {
   return {
     program: {
       units,
-      saleableAreaSqft,
-      netToGrossPct: 80, // Default value for seeded projects
+      siteAreaSqft: null,
+      fsr: null,
+      efficiencyPct: 85, // Default efficiency
     },
   };
 }

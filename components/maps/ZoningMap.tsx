@@ -125,6 +125,7 @@ export function ZoningMap({ center, pin, zones, className }: ZoningMapProps) {
         });
 
         // Create map instance
+        if (!mapRef.current) return;
         const map = L.map(mapRef.current, {
           center: [center.lat, center.lng],
           zoom: 14,

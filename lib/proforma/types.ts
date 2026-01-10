@@ -2,162 +2,150 @@
 
 export type AssetType = 'TOWNHOME' | 'MULTIFAMILY';
 export type Monetization = 'FOR_SALE' | 'FOR_RENT';
-export type PhaseType = 'ENTITLEMENT' | 'CONSTRUCTION' | 'SALES_LEASE';
+export type PhaseType = 'LAND_ENTITLEMENT' | 'SERVICING' | 'CONSTRUCTION';
 
 export type MonthlyCashflowRow = {
   monthIndex: number; // 1..N
   phase: PhaseType;
-  // Uses
+  // Uses (costs)
   land: number;
   soft: number;
   hard: number;
-  contingency: number;
-  devFee: number;
-  lenderFee: number;
-  interest: number;
-  // Sources
-  salesRevenue: number;
-  loanDraw: number;
-  equity: number; // plug (negative = investment, positive = distribution)
-  // Balances
-  debtOutstanding: number;
+  // Sources (revenue)
+  revenue: number; // Revenue during construction phase
 };
 
 export type ProFormaAssumptions = {
-  // Meta (Phase 1: asset type and monetization toggles)
+  // Meta
   meta: {
     assetType: AssetType;
-    monetization: Monetization; // Phase 1: FOR_SALE fully calculated; FOR_RENT gated
+    monetization: Monetization;
   };
 
-  // Program
+  // Program & Density
   program: {
     units: number | null;
-    saleableAreaSqft: number | null; // GFA/saleable area for revenue + cost per sqft
-    netToGrossPct: number | null; // For multifamily modeling (Phase 1: optional)
+    siteAreaSqft: number | null; // Site area in square feet
+    fsr: number | null; // Floor Space Ratio
+    efficiencyPct: number | null; // Efficiency percentage (e.g., 85 = 85%)
   };
 
   // Acquisition
   acquisition: {
-    landPrice: number | null; // CAD
-    closingCostsPct: number | null; // % of land price (legal, transfer taxes, etc)
+    landPurchasePrice: number | null; // Raw land purchase price
+    capitalizedLandCost: number | null; // All-in land cost used in cost stack
   };
 
-  // Revenue — FOR SALE (Phase 1: active)
-  revenueSale: {
-    salePricePerSqft: number | null; // CAD/sqft
-    otherRevenue: number | null; // CAD (parking, storage, misc)
-    salesCommissionPct: number | null; // % of total revenue
+  // Revenue
+  revenue: {
+    totalRevenue: number | null; // Total revenue ($)
+    sellingCostPct: number | null; // Selling cost (%)
+    sellingCostAddBack: number | null; // Selling cost add back ($)
   };
 
-  // Revenue — FOR RENT (Phase 1: placeholder fields only, UI gated)
-  revenueRent: {
-    avgRentPerUnitMonthly: number | null; // Placeholder (not used in Phase 1 calcs)
-    vacancyPct: number | null; // Placeholder
-  };
-
-  // Costs
-  costs: {
-    hardCostPerSqft: number | null; // CAD/sqft
-    softCostPctOfHard: number | null; // % of hard
-    contingencyPctOfHard: number | null; // % of hard
-    contingencyPctOfSoft: number | null; // % of soft
-    devFeePctOfCost: number | null; // % of (land + hard + soft + contingency)
-  };
-
-  // Financing (Phase 1: construction debt with monthly interest accrual)
-  financing: {
-    loanToCostPct: number | null; // % LTC cap
-    interestRatePct: number | null; // annual %
-    lenderFeePct: number | null; // % of loan amount (one-time)
-  };
-
-  // Timeline (Phase 1: 3 phases; total auto-sum)
+  // Timeline (3 phases)
   timeline: {
-    phases: {
-      entitlementMonths: number | null;
-      constructionMonths: number | null;
-      salesLeaseMonths: number | null;
-    };
-    totalMonths: number | null; // Derived, auto-computed from phases
-    autoCalcSalesMonths: boolean; // If true, auto-calc salesLeaseMonths from absorption
+    landEntitlementMonths: number | null;
+    servicingMonths: number | null;
+    constructionMonths: number | null;
   };
 
-  // For-sale absorption (Phase 1)
-  absorption: {
-    unitsPerMonth: number | null; // Used to auto compute salesLeaseMonths if enabled
+  // Soft Costs (lump-sum inputs)
+  softCosts: {
+    consultants: number | null;
+    municipalPermitFees: number | null;
+    otherSoftCosts: number | null;
+    marketing: number | null;
+    finance: number | null;
+    contingencyPct: number | null; // % of soft cost base
+  };
+
+  // Hard Costs
+  hardCosts: {
+    totalConstructionHardCost: number | null; // Lump sum
+    constructionManagement: number | null;
+    landServicingOffsite: number | null;
+    landServicingOnsite: number | null;
+    contingencyPct: number | null; // % of hard cost base
   };
 
   // Scenario sliders (UI-only; persist if user saves)
   scenario: {
-    deltaSalePricePerSqftPct: number; // e.g., -10..+10
-    deltaHardCostPerSqftPct: number; // e.g., -10..+10
-    deltaInterestRatePct: number; // e.g., -2..+2 (absolute points)
-    deltaTotalMonths: number; // e.g., -6..+6 months (applied to total, allocated to phases)
+    deltaRevenuePct: number; // e.g., -10..+10
+    deltaHardCostPct: number; // e.g., -10..+10
+    deltaDurationMonths: number; // e.g., -6..+6 months
   };
 };
 
 export type ProFormaOutputs = {
-  // Derived inputs (after scenario)
+  // Derived/computed program metrics
+  computed: {
+    grossBuildableArea: number | null; // Site Area × FSR
+    netSaleableSF: number | null; // GBA × Efficiency
+    acres: number | null; // Site Area ÷ 43,560
+    unitsPerAcre: number | null; // Units ÷ Acres
+  };
+
+  // Density benchmarks (using Land Purchase Price only)
+  densityBenchmarks: {
+    dollarPerLandSF: number | null;
+    dollarPerBuildableSF: number | null;
+    dollarPerSaleableSF: number | null;
+    dollarPerAcre: number | null;
+  };
+
+  // Effective values after scenario deltas
   eff: {
-    salePricePerSqft: number | null;
-    hardCostPerSqft: number | null;
-    interestRatePct: number | null;
+    totalRevenue: number | null;
+    totalConstructionHardCost: number | null;
     totalMonths: number | null;
-    entitlementMonths: number | null;
+    landEntitlementMonths: number | null;
+    servicingMonths: number | null;
     constructionMonths: number | null;
-    salesLeaseMonths: number | null;
   };
 
-  // Core $ values
+  // Revenue calculations
   revenue: {
-    grossRevenue: number | null;
-    salesCommission: number | null;
-    netRevenue: number | null;
+    totalRevenue: number | null; // After delta
+    sellingCost: number | null; // Revenue × sellingCostPct
+    sellingCostAddBack: number | null;
+    netRevenue: number | null; // Revenue - sellingCost + sellingCostAddBack
   };
 
-  costs: {
-    landTotal: number | null; // land + closing costs
-    hard: number | null;
-    soft: number | null;
-    contingency: number | null;
-    devFee: number | null;
-    subtotalBeforeFinancing: number | null;
+  // Soft cost calculations
+  softCosts: {
+    softBase: number | null; // Sum of consultants, municipal, other, marketing, finance
+    softContingency: number | null; // softBase × contingencyPct
+    landAndSoftTotal: number | null; // capitalizedLandCost + softBase + softContingency
+    // Normalized
+    softBasePerUnit: number | null;
+    softBasePerBuildableSF: number | null;
+    softBasePerSaleableSF: number | null;
   };
 
-  financing: {
-    maxLoanAmount: number | null; // Renamed from loanAmount
-    lenderFee: number | null;
-    totalInterest: number | null; // Renamed from interest (sum of monthly interest)
-    totalFinancing: number | null;
+  // Hard cost calculations
+  hardCosts: {
+    hardContingencyBase: number | null; // Construction + CM + Servicing (both)
+    hardContingency: number | null; // hardContingencyBase × contingencyPct
+    constructionAndHardTotal: number | null; // hardContingencyBase + hardContingency
+    // Normalized
+    hardBasePerUnit: number | null;
+    hardBasePerBuildableSF: number | null;
+    hardBasePerSaleableSF: number | null;
   };
 
+  // Totals
   totals: {
-    totalCost: number | null;
-    profit: number | null;
-    profitMarginPct: number | null; // profit / netRevenue
-    equityNeededPeak: number | null; // NEW: peak equity invested at any point
-    equityInvestedTotal: number | null; // NEW: sum of equity injections
-    equityMultiple: number | null; // (sum positive equity) / (sum negative equity)
-    equityIrrPct: number | null; // NEW: annualized IRR from equity cashflows
-    roiPct: number | null; // profit / equityInvestedTotal
+    totalProjectCost: number | null; // landAndSoftTotal + constructionAndHardTotal
+    profit: number | null; // netRevenue - totalProjectCost
+    returnOnCostPct: number | null; // (profit / totalProjectCost) × 100
+    // Normalized
+    revenuePerSaleableSF: number | null;
   };
 
-  // Monthly cashflow breakdown (Phase 1)
+  // Monthly cashflow breakdown (for display only)
   monthly: {
     rows: MonthlyCashflowRow[];
-  };
-
-  // Deltas (scenario vs base comparison)
-  deltas?: {
-    profitDelta: number | null;
-    profitMarginDeltaPct: number | null;
-    equityNeededDelta: number | null;
-  };
-
-  // Flags
-  flags: {
-    monetizationSupported: boolean; // true only for FOR_SALE in Phase 1
   };
 };
 

@@ -97,9 +97,9 @@ export function formatPercentDelta(
  */
 export function formatPhase(phase: string): string {
   const map: Record<string, string> = {
-    ENTITLEMENT: "Entitlement",
+    LAND_ENTITLEMENT: "Land & Entitlement",
+    SERVICING: "Servicing",
     CONSTRUCTION: "Construction",
-    SALES_LEASE: "Sales",
   };
   return map[phase] || phase;
 }
@@ -110,9 +110,9 @@ export function formatPhase(phase: string): string {
  */
 export function getPhaseColor(phase: string): string {
   const map: Record<string, string> = {
-    ENTITLEMENT: "bg-blue-100 text-blue-700",
+    LAND_ENTITLEMENT: "bg-blue-100 text-blue-700",
+    SERVICING: "bg-purple-100 text-purple-700",
     CONSTRUCTION: "bg-orange-100 text-orange-700",
-    SALES_LEASE: "bg-green-100 text-green-700",
   };
   return map[phase] || "bg-gray-100 text-gray-700";
 }

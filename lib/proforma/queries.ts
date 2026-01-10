@@ -8,72 +8,47 @@ import { defaultAssumptions } from "./defaults";
 
 /**
  * Migrate legacy pro forma assumptions to current schema.
- * Handles backward compatibility for data saved before Phase 1 upgrade.
+ * Handles backward compatibility for data saved with old structure.
  */
 function migrateLegacyAssumptions(assumptions: any): ProFormaAssumptions {
-  const migrated = { ...assumptions };
-
-  // Migrate timeline.totalMonths → phases (25/60/15 split)
-  if (migrated.timeline?.totalMonths && !migrated.timeline?.phases) {
-    const total = migrated.timeline.totalMonths;
-    const entitlement = Math.round(total * 0.25);
-    const construction = Math.round(total * 0.60);
-    const salesLease = total - entitlement - construction;
-
-    migrated.timeline = {
-      phases: {
-        entitlementMonths: entitlement,
-        constructionMonths: construction,
-        salesLeaseMonths: salesLease,
-      },
-      totalMonths: total,
-      autoCalcSalesMonths: false, // Default off for migrated data
-    };
+  // If assumptions already match new structure, return as-is
+  if (
+    assumptions.meta?.monetization !== undefined &&
+    assumptions.program?.siteAreaSqft !== undefined &&
+    assumptions.timeline?.landEntitlementMonths !== undefined &&
+    assumptions.softCosts !== undefined &&
+    assumptions.hardCosts !== undefined
+  ) {
+    return assumptions as ProFormaAssumptions;
   }
 
-  // Migrate revenue → revenueSale
-  if (migrated.revenue && !migrated.revenueSale) {
-    migrated.revenueSale = migrated.revenue;
-    migrated.revenueRent = {
-      avgRentPerUnitMonthly: null,
-      vacancyPct: null,
-    };
-    delete migrated.revenue;
+  // Otherwise, start with defaults and attempt to migrate what we can
+  const migrated: any = { ...defaultAssumptions };
+
+  // Migrate meta
+  if (assumptions.meta?.assetType) {
+    migrated.meta.assetType = assumptions.meta.assetType;
+  }
+  if (assumptions.meta?.monetization) {
+    migrated.meta.monetization = assumptions.meta.monetization;
   }
 
-  // Remove deprecated interestCoverageFactor
-  if (migrated.financing?.interestCoverageFactor !== undefined) {
-    delete migrated.financing.interestCoverageFactor;
+  // Migrate program - preserve units if available
+  if (assumptions.program?.units) {
+    migrated.program.units = assumptions.program.units;
   }
 
-  // Add missing meta
-  if (!migrated.meta) {
-    migrated.meta = {
-      assetType: 'TOWNHOME',
-      monetization: 'FOR_SALE',
-    };
-  }
-
-  // Add missing absorption
-  if (!migrated.absorption) {
-    migrated.absorption = {
-      unitsPerMonth: 4,
-    };
-  }
-
-  // Add missing program.netToGrossPct
-  if (migrated.program && migrated.program.netToGrossPct === undefined) {
-    migrated.program.netToGrossPct = 80;
-  }
-
-  // Ensure timeline structure exists
-  if (!migrated.timeline) {
-    migrated.timeline = defaultAssumptions.timeline;
-  }
-
-  // Ensure autoCalcSalesMonths exists
-  if (migrated.timeline && migrated.timeline.autoCalcSalesMonths === undefined) {
-    migrated.timeline.autoCalcSalesMonths = true;
+  // Migrate timeline - try to extract phase months from old structure
+  if (assumptions.timeline?.phases) {
+    migrated.timeline.landEntitlementMonths = assumptions.timeline.phases.entitlementMonths ?? 12;
+    migrated.timeline.servicingMonths = 6; // Default
+    migrated.timeline.constructionMonths = assumptions.timeline.phases.constructionMonths ?? 18;
+  } else if (assumptions.timeline?.totalMonths) {
+    // Old flat structure - split proportionally
+    const total = assumptions.timeline.totalMonths;
+    migrated.timeline.landEntitlementMonths = Math.round(total * 0.33);
+    migrated.timeline.servicingMonths = Math.round(total * 0.17);
+    migrated.timeline.constructionMonths = total - migrated.timeline.landEntitlementMonths - migrated.timeline.servicingMonths;
   }
 
   return migrated as ProFormaAssumptions;
